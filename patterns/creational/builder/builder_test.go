@@ -1,7 +1,8 @@
 package builder
 
 import (
-	"fmt"
+	"bytes"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,45 +13,57 @@ func TestManufacturingDirector_Builder(t *testing.T) {
 		Name           string
 		MD             ManufacturingDirector
 		Cast           BuildProcess
-		ExpectedResult Gun
+		ExpectedResult struct {
+			Method string
+			Url    string
+			Body   []byte
+		}
 	}
 
 	testCases := []*testCase{
 		{
-			Name: "success pistol",
+			Name: "success post request",
 			MD:   ManufacturingDirector{},
-			Cast: new(Pistol),
-			ExpectedResult: Gun{
-				Ammo:      10,
-				Damage:    5,
-				Structure: "Pistol",
-			},
+			Cast: new(HttpPost),
+			ExpectedResult: struct {
+				Method string
+				Url    string
+				Body   []byte
+			}{Method: http.MethodPost, Url: "http://test_method_post.com", Body: []byte("{\"data\": \"hello_post\"}")},
 		},
 		{
-			Name: "success rifle",
+			Name: "success get request",
 			MD:   ManufacturingDirector{},
-			Cast: new(Rifle),
-			ExpectedResult: Gun{
-				Ammo:      30,
-				Damage:    10,
-				Structure: "Rifle",
-			},
+			Cast: new(HttpGet),
+			ExpectedResult: struct {
+				Method string
+				Url    string
+				Body   []byte
+			}{Method: http.MethodGet, Url: "http://test_method_get.com", Body: []byte("{\"data\": \"hello_get\"}")},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
+			expectedRequest, _ := http.NewRequest(tc.ExpectedResult.Method, tc.ExpectedResult.Url, bytes.NewReader(tc.ExpectedResult.Body))
+
 			manufacturingComplex := ManufacturingDirector{}
 
 			manufacturingComplex.SetBuilder(tc.Cast)
 			manufacturingComplex.Construct()
-			got := tc.Cast.GetGun()
+			got := tc.Cast.GetRequest()
 
-			if !assert.Equal(t, tc.ExpectedResult, got) {
-				t.Errorf("expected resutl %v got that: %v", tc.ExpectedResult, got)
+			if !assert.Equal(t, expectedRequest.Method, got.Method) {
+				t.Errorf("expected result %v got that: %v", expectedRequest.Method, got.Method)
 			}
 
-			fmt.Printf("GOT: %v\n", got)
+			if !assert.Equal(t, expectedRequest.URL.String(), got.URL.String()) {
+				t.Errorf("expected result %v got that: %v", expectedRequest.URL.String(), got.URL.String())
+			}
+
+			if !assert.Equal(t, expectedRequest.Body, got.Body) {
+				t.Errorf("expected result %v got that: %v", expectedRequest.Body, got.Body)
+			}
 		})
 	}
 }

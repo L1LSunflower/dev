@@ -38,7 +38,7 @@ func TestSingleton_AddChar(t *testing.T) {
 			// Перезаписываем значение
 			got = ReadChars()
 			if string(got) != tc.ExpectedResult {
-				t.Fatalf("expected that: %v got that %v", tc.ExpectedResult, got)
+				t.Errorf("expected that: %v got that %v", tc.ExpectedResult, got)
 			}
 
 		})

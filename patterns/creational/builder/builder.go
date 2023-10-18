@@ -1,10 +1,17 @@
 package builder
 
+import (
+	"bytes"
+	"net/http"
+)
+
+// TODO: REWORK. Make more real world case
+
 type BuildProcess interface {
-	SetAmmo() BuildProcess
-	SetDamage() BuildProcess
-	SetStructure() BuildProcess
-	GetGun() Gun
+	SetMethod() BuildProcess
+	SetUrl() BuildProcess
+	SetBody() BuildProcess
+	GetRequest() http.Request
 }
 
 type ManufacturingDirector struct {
@@ -16,57 +23,57 @@ func (m *ManufacturingDirector) SetBuilder(b BuildProcess) {
 }
 
 func (m *ManufacturingDirector) Construct() {
-	m.builder.SetAmmo().SetDamage().SetStructure()
+	m.builder.SetMethod().SetUrl().SetBody()
 }
 
-type Gun struct {
-	Ammo      int
-	Damage    int
-	Structure string
+type HttpPost struct {
+	Method string
+	Url    string
+	Body   []byte
 }
 
-type Pistol struct {
-	g Gun
-}
-
-func (p *Pistol) SetAmmo() BuildProcess {
-	p.g.Ammo = 10
+func (p *HttpPost) SetMethod() BuildProcess {
+	p.Method = http.MethodPost
 	return p
 }
 
-func (p *Pistol) SetDamage() BuildProcess {
-	p.g.Damage = 5
+func (p *HttpPost) SetUrl() BuildProcess {
+	p.Url = "http://test_method_post.com"
 	return p
 }
 
-func (p *Pistol) SetStructure() BuildProcess {
-	p.g.Structure = "Pistol"
+func (p *HttpPost) SetBody() BuildProcess {
+	p.Body = []byte("{\"data\": \"hello_post\"}")
 	return p
 }
 
-func (p *Pistol) GetGun() Gun {
-	return p.g
+func (p *HttpPost) GetRequest() http.Request {
+	request, _ := http.NewRequest(p.Method, p.Url, bytes.NewReader(p.Body))
+	return *request
 }
 
-type Rifle struct {
-	g Gun
+type HttpGet struct {
+	Method string
+	Url    string
+	Body   []byte
 }
 
-func (r *Rifle) SetAmmo() BuildProcess {
-	r.g.Ammo = 30
-	return r
+func (p *HttpGet) SetMethod() BuildProcess {
+	p.Method = http.MethodGet
+	return p
 }
 
-func (r *Rifle) SetDamage() BuildProcess {
-	r.g.Damage = 10
-	return r
+func (p *HttpGet) SetUrl() BuildProcess {
+	p.Url = "http://test_method_get.com"
+	return p
 }
 
-func (r *Rifle) SetStructure() BuildProcess {
-	r.g.Structure = "Rifle"
-	return r
+func (p *HttpGet) SetBody() BuildProcess {
+	p.Body = []byte("{\"data\": \"hello_get\"}")
+	return p
 }
 
-func (r *Rifle) GetGun() Gun {
-	return r.g
+func (p *HttpGet) GetRequest() http.Request {
+	request, _ := http.NewRequest(p.Method, p.Url, bytes.NewReader(p.Body))
+	return *request
 }
